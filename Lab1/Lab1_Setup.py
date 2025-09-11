@@ -44,6 +44,7 @@ def main():
     position_data = []
     current_data = []
     temperature_data = []
+    speed_data = []
     ee_data= []
     time_data = []
 
@@ -61,21 +62,30 @@ def main():
                     #-------------------- SECTION 2 READ DATA -------------------------
 
                     # Read sensor values and write command. Tip: dont forget arguments, they are ready to use
-                    
+                    myArm.read_write_std(phiCmd, gripCmd,ledCmd)
 
                     # Create local variables and set equal to class variables. Tip: use .copy()
-                    
+                    jointPos = myArm.measJointPosition.copy()
+                    jointCurrent = myArm.measJointCurrent.copy()
+                    jointSpeed = myArm.measJointSpeed.copy()
+                    jointPWM = myArm.measJointPWM.copy()
+                    jointTemperature = myArm.measJointTemperature.copy()
+                
                     
                     # Add readings to lists. Use named lists already created for you
-
+                    position_data.append(jointPos)
+                    current_data.append(jointCurrent)
+                    temperature_data.append(jointTemperature)
+                    speed_data.append(jointSpeed)
                     # Waypoint error -- copy from lab instructions --
-                    
+                    error = np.linalg.norm(jointPos[0:4]-waypoints[i])
 
                     #------------- SECTION 4 FORWARDS KINEMATICS OF EE----------------
                     
                     # Compute ee_loc, ee_rot using QArm forward kinematics
-                    
-                    
+
+                    ee_loc,ee_rot=myArmUtilities.forward_kinematics(jointPos)
+                    ee_data.append(ee_loc[:3].flatten())
                     
                     # Add result to list created for you. Only record xyz with ee_loc[:3].flatten()
                     
@@ -102,18 +112,40 @@ def main():
     current_data = np.array(current_data)
     ee_data = np.array(ee_data)
     time_data = np.array(time_data)
+    temperature_data = np.array(temperature_data)
+    speed_data = np.array(speed_data)
 
     #------------------------------ SECTION 3 PLOT DATA -------------------------------
     #               PYPLOT REFERENCES CAN BE PROVIDED IN LAB BACKGROUND
 
     # Plot joint positions
+    plt.figure(1)
+    plt.plot(time_data, position_data)
+    plt.xlabel("time")
+    plt.ylabel("joint position")
+    #plt.legend("joint 1", "joint 2", "joint 3", "joint 4")
+    plt.title("Joint position vs Time")
 
     # Plot joint currents
-
-    # Plot end effector trajectory
-
-    # Show all plots
+    plt.figure(2)
+    plt.plot(time_data,current_data)
+    plt.xlabel("time")
+    plt.ylabel("joint current")
+   # plt.legend("joint 1", "joint 2", "joint 3", "joint 4")
+    plt.title("Joint current vs Time")
     
+    
+    # Plot end effector trajectory
+    fig = plt.figure()
+    ax = fig.add_subplot(projection = '3d')
+
+    ax.plot(ee_data[:,0], ee_data[:,1], ee_data[:,2])
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Z")
+    plt.title("End Effector Trajectory")
+    # Show all plotsc
+    plt.show()
     #-------------------------------------------------------------------------
 
     print("Program Ended")
